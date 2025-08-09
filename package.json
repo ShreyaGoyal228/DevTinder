@@ -13,7 +13,9 @@
   "author": "Shreya Goyal",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "express": "^5.1.0",
-    "mongoose": "^8.17.0"
+    "mongoose": "^8.17.0",
+    "validator": "^13.15.15"
   }
 }

@@ -1,23 +1,72 @@
 const express = require("express");
-
 const app = express();
 const connectDb = require("./config/database");
+const bcrypt = require("bcrypt");
 const User = require("./models/user");
 
 app.use(express.json());
 
 //signup api
 app.post("/signup", async (req, res) => {
-  const data = req.body;
-
-  // we are creating the new instance of model User
-  const user = new User(data);
   try {
+    //validate the data (already done through schema) and then encrypt the password and then save into the database
+    const {
+      firstName,
+      lastName,
+      about,
+      emailId,
+      photoUrl,
+      skills,
+      age,
+      gender,
+    } = req.body;
+
+    //encrypt the password
+    const password = req.body.password;
+    const hashedPass = await bcrypt.hash(password, 10);
+
+    // we are creating the new instance of model User
+    const user = new User({
+      firstName,
+      lastName,
+      password: hashedPass,
+      about,
+      emailId,
+      photoUrl,
+      skills,
+      age,
+      gender,
+    });
+
     //on saving a new document was created into the user collection in database
     await user.save();
     res.send("User added successfully!");
   } catch (err) {
-    res.status(500).send("Error in adding the user : ", err.message);
+    res.status(400).send("Error saving the user : " + err.message);
+  }
+});
+
+//login api
+app.post("/login", async (req, res) => {
+  const { emailId, password } = req.body;
+
+  try {
+    const user = await User.findOne({ emailId: emailId });
+    
+    if (!user) {
+      throw new Error("Invalid Credentials.");
+    }
+    //check the password
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.password
+    );
+    if (!isPasswordValid) {
+      throw new Error("Invalid Credentials.");
+    }
+    res.send("Login succesfull.");
+  } catch (err) {
+    res.status(400).send("Error in logging in : " + err.message);
   }
 });
 
@@ -53,24 +102,41 @@ app.delete("/delete", async (req, res) => {
     console.log("delete user is", deleteUser);
     res.send("User deleted successfully.");
   } catch (err) {
-    console.log("Error in fetching the users :", err.message);
+    res.status(400).send("Error in deleting the user : " + err.message);
   }
 });
 
 //update user api
-app.put("/update", async (req, res) => {
-  const emailId = req.body.emailId;
+app.patch("/update/:userId", async (req, res) => {
+  // const id = req.body.userId;
+  const id = req.params.userId;
+  const body = req.body;
 
   try {
-    const userUpdate = await User.findOneAndUpdate(
-      { emailId: emailId },
-      { firstName: "Anmolllll" },
-      { returnDocument: "before" }
-    );
+    //do not allow to update the emailId
+    const ALLOWED_UPDATES = [
+      "firstName",
+      "lastName",
+      "password",
+      "gender",
+      "about",
+      "photoUrl",
+      "age",
+      "skills",
+    ];
+    if (!Object.keys(body).every((k) => ALLOWED_UPDATES.includes(k))) {
+      throw new Error("Update not allowed.");
+    }
+    const userUpdate = await User.findOneAndUpdate({ _id: id }, body, {
+      returnDocument: "before",
+      //re-run the schema validators on update
+      runValidators: "true",
+    });
+
     console.log("user before update is", userUpdate);
     res.send("user updated successfully.");
   } catch (err) {
-    console.log("Error in fetching the users :", err.message);
+    res.status(400).send("Error in updating the user : " + err.message);
   }
 });
 
