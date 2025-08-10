@@ -3,8 +3,12 @@ const app = express();
 const connectDb = require("./config/database");
 const bcrypt = require("bcrypt");
 const User = require("./models/user");
+const cookieParser = require("cookie-parser");
+const { userAuth } = require("./middlewares/auth");
 
 app.use(express.json());
+//to read the token value from the cookies we need cookie-parser
+app.use(cookieParser());
 
 //signup api
 app.post("/signup", async (req, res) => {
@@ -52,91 +56,45 @@ app.post("/login", async (req, res) => {
 
   try {
     const user = await User.findOne({ emailId: emailId });
-    
+
     if (!user) {
       throw new Error("Invalid Credentials.");
     }
     //check the password
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isPasswordValid = await user.validatePassword(password)
     if (!isPasswordValid) {
       throw new Error("Invalid Credentials.");
     }
+
+    //Create the jwt token
+    // const token = await jwt.sign({ _id: user._id }, "DevTinder@3345", {
+    //   expiresIn: "1d",
+    // });
+    const token = await user.getJWT();
+    //and send it to the cookies
+    res.cookie("token", token);
     res.send("Login succesfull.");
   } catch (err) {
     res.status(400).send("Error in logging in : " + err.message);
   }
 });
 
-//get the user by emailId
-app.get("/user", async (req, res) => {
-  const emailId = req.body.emailId;
-
+//profile api
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const user = await User.findOne({ emailId: emailId });
-    console.log("user with this email is", user);
-    res.send("User fetched successfully.");
+    const user = req.user;
+    res.send(user);
   } catch (err) {
-    console.log("Error in fetching the users :", err.message);
+    res.status(400).send("Error in getting the profile : " + err.message);
   }
 });
 
-//get the feed of users
-app.get("/feed", async (req, res) => {
+app.post("/sendConnectionReq", userAuth, async (req, res) => {
   try {
-    const allUsers = await User.find({});
-    console.log("all users are", allUsers);
-    res.send("Users fetched successfully.");
+    const user = req.user;
+    res.send(user.firstName + " sent the connection request.");
   } catch (err) {
-    console.log("Error in fetching the users :", err.message);
-  }
-});
-
-//delete user api
-app.delete("/delete", async (req, res) => {
-  const userId = req.body.userId;
-  try {
-    const deleteUser = await User.findOneAndDelete({ _id: userId });
-    console.log("delete user is", deleteUser);
-    res.send("User deleted successfully.");
-  } catch (err) {
-    res.status(400).send("Error in deleting the user : " + err.message);
-  }
-});
-
-//update user api
-app.patch("/update/:userId", async (req, res) => {
-  // const id = req.body.userId;
-  const id = req.params.userId;
-  const body = req.body;
-
-  try {
-    //do not allow to update the emailId
-    const ALLOWED_UPDATES = [
-      "firstName",
-      "lastName",
-      "password",
-      "gender",
-      "about",
-      "photoUrl",
-      "age",
-      "skills",
-    ];
-    if (!Object.keys(body).every((k) => ALLOWED_UPDATES.includes(k))) {
-      throw new Error("Update not allowed.");
-    }
-    const userUpdate = await User.findOneAndUpdate({ _id: id }, body, {
-      returnDocument: "before",
-      //re-run the schema validators on update
-      runValidators: "true",
-    });
-
-    console.log("user before update is", userUpdate);
-    res.send("user updated successfully.");
-  } catch (err) {
-    res.status(400).send("Error in updating the user : " + err.message);
+    res.status(500).send("Error : " + err.message);
   }
 });
 
