@@ -2,17 +2,17 @@ const express = require("express");
 const app = express();
 const connectDb = require("./config/database");
 const cookieParser = require("cookie-parser");
-const { authRouter } = require("../router/auth");
-const { profileRouter } = require("../router/profile");
-const { requestRouter } = require("../router/request");
+const { authRouter } = require("./router/auth");
+const { profileRouter } = require("./router/profile");
+const { requestRouter } = require("./router/request");
 
 app.use(express.json());
 //to read the token value from the cookies we need cookie-parser
 app.use(cookieParser());
 
-app.use("/",authRouter)
-app.use("/",profileRouter)
-app.use("/",requestRouter)
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
 
 connectDb()
   .then(() => {

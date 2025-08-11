@@ -1,7 +1,7 @@
 const express = require("express");
 const profileRouter = express.Router();
-const { userAuth } = require("../src/middlewares/auth");
-const User = require("../src/models/user");
+const { userAuth } = require("../middlewares/auth");
+const User = require("../models/user");
 const bcrypt = require("bcrypt");
 const {
   validateEditProfileData,
@@ -64,7 +64,7 @@ profileRouter.patch("/profile/changePassword", userAuth, async (req, res) => {
 
     //hash th new Password
     const hashedNewPass = await bcrypt.hash(newPass, 10);
-    
+
     // save it in the database
     await User.findByIdAndUpdate(
       user._id,

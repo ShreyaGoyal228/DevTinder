@@ -1,6 +1,6 @@
-const express=require("express");
-const requestRouter=express.Router()
-const { userAuth } =  require("../src/middlewares/auth");
+const express = require("express");
+const requestRouter = express.Router();
+const { userAuth } = require("../middlewares/auth");
 
 requestRouter.post("/sendConnectionReq", userAuth, async (req, res) => {
   try {
@@ -11,4 +11,4 @@ requestRouter.post("/sendConnectionReq", userAuth, async (req, res) => {
   }
 });
 
-module.exports={requestRouter}
+module.exports = { requestRouter };
