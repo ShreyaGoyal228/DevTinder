@@ -72,6 +72,9 @@ profileRouter.patch("/profile/changePassword", userAuth, async (req, res) => {
       { runValidators: true, returnDocument: "after" }
     );
 
+    //logout from the profile
+    res.cookie("token", null, { expires: new Date(Date.now()) });
+
     res.send("Password updated successfully.");
   } catch (err) {
     res.status(400).send("Error : " + err.message);

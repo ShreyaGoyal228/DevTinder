@@ -12,10 +12,8 @@ patch /profile/edit
 patch /profile/changePassword
 
 ## requestRouter
-post /request/send/ignore/:userId
-post /request/send/interest/:userId
+post /request/sent/:status/:userId
 post /request/review/accept/:receiverId
-post /request/review/reject/:receiverId
 
 ## userRouter
 get /user/connections
