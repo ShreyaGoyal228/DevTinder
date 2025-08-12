@@ -24,8 +24,8 @@ POST /request/review/:status/:requestId
 ## userRouter
 ```
 GET /user/connections
-GET /user/receivedReq
-GET /user/sendReq
+GET /user/requests/received
+GET /user/requests/send
 GET /feed   Gets you the profile of other users on the platform
 ```
 
