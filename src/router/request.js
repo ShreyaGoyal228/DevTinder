@@ -31,7 +31,7 @@ requestRouter.post(
           { fromUserId: toUserId, toUserId: fromUserId },
         ],
       });
- 
+
       if (existingConnectionReq) {
         throw new Error("Connection Request exists already.");
       }
@@ -43,9 +43,41 @@ requestRouter.post(
       });
 
       await connectionRequest.save();
-      res.send({message:"Connection Request sent successfully"});
+      res.send({ message: "Connection Request sent successfully" });
     } catch (err) {
       res.status(400).send({ message: err.message });
+    }
+  }
+);
+
+requestRouter.post(
+  "/request/review/:status/:requestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const { status, requestId } = req.params;
+      const loggedInUser = req.user;
+
+      const ALLOWED_STATUS = ["accepted", "rejected"];
+      if (!ALLOWED_STATUS.includes(status)) {
+        throw new Error(`${status} is not a valid status.`);
+      }
+
+      const connectionRequest = await ConnectionRequest.findOne({
+        _id: requestId,
+        toUserId: loggedInUser._id,
+        status: "interested",
+      });
+
+      if (!connectionRequest) {
+        throw new Error("Connection request not found.");
+      }
+
+      connectionRequest.status = status;
+      await connectionRequest.save();
+      res.send({ message: `Connection request ${status} successfully.` });
+    } catch (err) {
+      res.status(400).send("Error :" + err.message);
     }
   }
 );
