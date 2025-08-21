@@ -32,9 +32,9 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
       }
       return row.fromUserId;
     });
-    res.send({ message: "Connections are :", data: data });
+    res.send(data);
   } catch (err) {
-    res.status(400).send("Error :" + err.message);
+    res.status(400).send(err.message);
   }
 });
 
@@ -45,9 +45,9 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
       status: "interested",
       toUserId: loggedInUser._id,
     }).populate("fromUserId", ALLOWED_FIELDS);
-    res.send({ message: "Received requests: ", data: requestsReceived });
+    res.send(requestsReceived);
   } catch (err) {
-    res.status(400).send("Error : " + err.message);
+    res.status(400).send(err.message);
   }
 });
 
@@ -95,16 +95,27 @@ userRouter.get("/user/feed", userAuth, async (req, res) => {
       hideUsersFromFeed.add(row.toUserId.toString());
     });
 
+    //if in case there isn't any connection request then we will hide the logged in user from the feed
+    hideUsersFromFeed.add(loggedInUser._id.toString());
+
     const feedUsers = await User.find({
       _id: { $nin: Array.from(hideUsersFromFeed) },
     })
-      .select(["firstName", "lastName", "age", "gender", "skills", "photoUrl"])
+      .select([
+        "firstName",
+        "lastName",
+        "age",
+        "gender",
+        "skills",
+        "photoUrl",
+        "about",
+      ])
       .skip(skip)
       .limit(limit);
 
-    res.send({ message: "Feed is :", data: feedUsers });
+    res.send(feedUsers);
   } catch (err) {
-    res.status(400).send("Error : " + err.message);
+    res.status(400).send(err.message);
   }
 });
 

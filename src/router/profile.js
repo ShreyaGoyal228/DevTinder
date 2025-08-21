@@ -14,7 +14,7 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
     const user = req.user;
     res.send(user);
   } catch (err) {
-    res.status(400).send("Error in getting the profile : " + err.message);
+    res.status(401).send("Please login!");
   }
 });
 
@@ -32,11 +32,11 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
       returnDocument: "after",
     });
     res.json({
-      message: `${updatedUser.firstName} updated successfully.`,
-      data: updatedUser,
+      message: `${updatedUser.firstName}'s profile updated successfully.`,
+      updatedUser,
     });
   } catch (err) {
-    res.status(400).send("Error : " + err.message);
+    res.status(400).send(err.message);
   }
 });
 
@@ -62,7 +62,7 @@ profileRouter.patch("/profile/changePassword", userAuth, async (req, res) => {
       throw new Error("New Password is not strong.");
     }
 
-    //hash th new Password
+    //hash the new Password
     const hashedNewPass = await bcrypt.hash(newPass, 10);
 
     // save it in the database
