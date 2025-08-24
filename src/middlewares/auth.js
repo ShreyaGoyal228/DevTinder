@@ -6,7 +6,7 @@ const userAuth = async (req, res, next) => {
     if (!token) {
       return res.status(401).send("Please Login.");
     }
-    const { _id } = await jwt.verify(token, "DevTinder@3345");
+    const { _id } = await jwt.verify(token,process.env.TOKEN_SECRET);
     const user = await User.findById({ _id: _id });
     if (!user) {
       throw new Error("User doesn't exist.");
