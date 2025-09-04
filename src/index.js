@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+require("dotenv").config();
 const cors = require("cors");
 const connectDb = require("./config/database");
 const cookieParser = require("cookie-parser");
@@ -7,7 +8,7 @@ const { authRouter } = require("./router/auth");
 const { profileRouter } = require("./router/profile");
 const { requestRouter } = require("./router/request");
 const userRouter = require("./router/userRouter");
-require("dotenv").config();
+const paymentRouter = require("./router/payment");
 app.use(
   cors({
     origin: "http://localhost:5173", //specify the exact origin of your frontend
@@ -22,6 +23,7 @@ app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
+app.use("/", paymentRouter);
 
 connectDb()
   .then(() => {
